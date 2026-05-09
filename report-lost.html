@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Report Lost Item</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/report-lost.css">
+</head>
+<body>
+<header>
+  <h1><span>Lost & Found Portal</span></h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a class="active" href="report-lost.html">Report Lost</a>
+    <a href="report-found.html">Report Found</a>
+    <a href="search.html">Search</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+</header>
+
+<main>
+  <section>
+    <h2>Report a Lost Item</h2>
+    <div class="form-container">
+      <form action="backend/submit_lost.php" method="post" enctype="multipart/form-data">
+        <label>Item Name</label>
+        <input type="text" name="name" required>
+
+        <label>Category</label>
+        <select name="category" required>
+          <option>Books</option>
+          <option>Electronics</option>
+          <option>Bags</option>
+          <option>ID Cards</option>
+          <option>Accessories</option>
+          <option>Others</option>
+        </select>
+
+        <label>Date Lost</label>
+        <input type="date" name="date_occured" required>
+
+        <label>Location</label>
+        <input type="text" name="location" placeholder="e.g. Library" required>
+
+        <label>Description</label>
+        <textarea name="description" rows="4"></textarea>
+
+        <label>Contact Info (phone or email)</label>
+        <input type="text" name="contact_info" placeholder="so finder can contact you" required>
+
+        <label>Upload Image (optional)</label>
+        <input type="file" name="image" accept="image/*">
+
+        <button type="submit">Submit Report</button>
+      </form>
+    </div>
+  </section>
+</main>
+<footer>© 2025 Lost & Found Portal</footer>
+</body>
+</html>

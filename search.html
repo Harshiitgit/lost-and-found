@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Search Items</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/search.css">
+</head>
+<body>
+<header>
+  <h1><span>Lost & Found Portal</span></h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="report-lost.html">Report Lost</a>
+    <a href="report-found.html">Report Found</a>
+    <a class="active" href="search.html">Search</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+</header>
+
+<main>
+  <section>
+    <h2>Search Lost & Found Items</h2>
+    <div class="form-container">
+      <form id="searchForm">
+        <label>Keyword</label>
+        <input type="text" id="keyword" placeholder="Item name">
+
+        <label>Category</label>
+        <select id="category">
+          <option value="">All</option>
+          <option>Books</option>
+          <option>Electronics</option>
+          <option>Bags</option>
+          <option>ID Cards</option>
+          <option>Accessories</option>
+          <option>Others</option>
+        </select>
+
+        <label>Location</label>
+        <input type="text" id="location" placeholder="e.g. Library">
+
+        <button type="submit">Search</button>
+      </form>
+
+      <div id="results" class="results" style="margin-top:18px;"></div>
+    </div>
+  </section>
+</main>
+
+<footer>© 2025 Lost & Found Portal</footer>
+
+<script>
+document.getElementById('searchForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const k = encodeURIComponent(document.getElementById('keyword').value.trim());
+  const c = encodeURIComponent(document.getElementById('category').value);
+  const l = encodeURIComponent(document.getElementById('location').value.trim());
+  const q = `backend/search.php?keyword=${k}&category=${c}&location=${l}`;
+  const res = await fetch(q);
+  const items = await res.json();
+  const container = document.getElementById('results');
+  container.innerHTML = '';
+  if(items.length===0) { container.innerHTML = '<p>No matches found.</p>'; return; }
+  items.forEach(it=>{
+    const el = document.createElement('div');
+    el.className='item-card';
+    el.style.padding='14px';
+    el.innerHTML = `<img src="${it.image_path ? it.image_path : 'https://via.placeholder.com/250x150'}">
+      <p><strong>${escapeHtml(it.type.toUpperCase())}</strong> • ${escapeHtml(it.category)}</p>
+      <p>${escapeHtml(it.name)}</p>
+      <p>${escapeHtml(it.location)} • ${escapeHtml(it.date_occured)}</p>
+      <p>${escapeHtml(it.description||'')}</p>
+      <p><em>Contact:</em> ${escapeHtml(it.contact_info||'Not provided')}</p>`;
+    container.appendChild(el);
+  });
+});
+
+function escapeHtml(s){ if(!s) return ''; return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+</script>
+</body>
+</html>
+

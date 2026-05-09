@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Lost & Found Portal - Home</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/home.css">
+</head>
+<body>
+  <header>
+  <h1><span>Lost & Found Portal</span></h1>
+    <nav>
+      <a class="active" href="index.html">Home</a>
+      <a href="report-lost.html">Report Lost</a>
+      <a href="report-found.html">Report Found</a>
+      <a href="search.html">Search</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="main-hero">
+      <div class="hero-inner">
+        <h2>Find What’s Lost. Return What’s Found.</h2>
+        <div class="search-bar">
+          <input id="home-search" placeholder="Search items by name, category or location">
+          <button onclick="location.href='search.html'">Search</button>
+        </div>
+        <div class="hero-buttons">
+          <button onclick="location.href='report-lost.html'">I Lost Something</button>
+          <button onclick="location.href='report-found.html'">I Found Something</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="categories">
+      <h3>Browse by Category</h3>
+      <div class="category-list">
+        <div class="category-card" onclick="location.href='search.html?category=Books'">
+          <div class="icon" style="background:linear-gradient(135deg,#7cc0ff,#4b6fff)">📚</div>
+          <div class="content"><span class="title">Books</span><span class="subtitle">Notes, textbooks</span></div>
+        </div>
+        <div class="category-card" onclick="location.href='search.html?category=Electronics'">
+          <div class="icon" style="background:linear-gradient(135deg,#ffd47a,#ff8a6b)">💻</div>
+          <div class="content"><span class="title">Electronics</span><span class="subtitle">Phones, chargers</span></div>
+        </div>
+        <div class="category-card" onclick="location.href='search.html?category=Bags'">
+          <div class="icon" style="background:linear-gradient(135deg,#b8ffb3,#4bd39b)">🎒</div>
+          <div class="content"><span class="title">Bags</span><span class="subtitle">Backpacks, purses</span></div>
+        </div>
+        <div class="category-card" onclick="location.href='search.html?category=ID Cards'">
+          <div class="icon" style="background:linear-gradient(135deg,#d4b3ff,#9b6bff)">🪪</div>
+          <div class="content"><span class="title">ID Cards</span><span class="subtitle">Student/Staff IDs</span></div>
+        </div>
+        <div class="category-card" onclick="location.href='search.html?category=Accessories'">
+          <div class="icon" style="background:linear-gradient(135deg,#ffd3e0,#ff8ab3)">👓</div>
+          <div class="content"><span class="title">Accessories</span><span class="subtitle">Jewelry, keys</span></div>
+        </div>
+        <div class="category-card" onclick="location.href='search.html?category=Others'">
+          <div class="icon" style="background:linear-gradient(135deg,#ffd8a8,#ffc07a)">🔑</div>
+          <div class="content"><span class="title">Others</span><span class="subtitle">Miscellaneous</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="stat"><span id="stat-returned">--</span> Items Returned</div>
+      <div class="stat"><span id="stat-active">--</span> Active Reports</div>
+      <div class="stat"><span id="stat-matches">--</span> Matches Found</div>
+    </section>
+
+    <section class="recent-items">
+      <h3 style="text-align:center">Recently Reported Items</h3>
+  <div id="recent-carousel" class="carousel no-scrollbar" style="padding:18px"></div>
+    </section>
+  </main>
+
+  <footer>
+    © 2025 Lost & Found Portal | College Project
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    // render recent items and simple stats (stats are basic counts derived client-side)
+    (async ()=>{
+      const items = await fetch('backend/get_recent.php').then(r=>r.json()).catch(()=>[]);
+      const carousel = document.getElementById('recent-carousel');
+      items.forEach(it=>{
+        const el = document.createElement('div');
+        el.className='item-card';
+        el.innerHTML = `<img src="${it.image_path ? it.image_path : 'https://via.placeholder.com/250x150'}">
+                        <p><strong>${it.type.toUpperCase()}</strong> • ${it.category}</p>
+                        <p>${it.name}</p>
+                        <p>${it.location} • ${it.date_occured}</p>`;
+        carousel.appendChild(el);
+      });
+      // simple stats
+      document.getElementById('stat-active').textContent = items.length;
+      const returned = items.filter(i=>i.type==='found').length;
+      document.getElementById('stat-returned').textContent = returned;
+      document.getElementById('stat-matches').textContent = Math.floor(items.length/5);
+    })();
+  </script>
+</body>
+</html>
+
+

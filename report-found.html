@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Report Found Item</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/report-found.css">
+</head>
+<body>
+<header>
+  <h1><span>Lost & Found Portal</span></h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="report-lost.html">Report Lost</a>
+    <a class="active" href="report-found.html">Report Found</a>
+    <a href="search.html">Search</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+</header>
+
+<main>
+  <section>
+    <h2>Report a Found Item</h2>
+    <div class="page-grid">
+      <div class="form-panel">
+        <div class="form-container">
+          <form id="foundForm" action="backend/submit_found.php" method="post" enctype="multipart/form-data">
+            <div class="form-row-2">
+              <div>
+                <label>Item Name</label>
+                <input type="text" name="name" required>
+              </div>
+              <div>
+                <label>Category</label>
+                <select name="category" required>
+                  <option>Books</option>
+                  <option>Electronics</option>
+                  <option>Bags</option>
+                  <option>ID Cards</option>
+                  <option>Accessories</option>
+                  <option>Others</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div>
+                <label>Date Found</label>
+                <input type="date" name="date_occured" required>
+              </div>
+              <div>
+                <label>Location</label>
+                <input type="text" name="location" placeholder="e.g. Auditorium" required>
+              </div>
+            </div>
+
+            <label>Description</label>
+            <textarea name="description" rows="4"></textarea>
+
+            <label>Contact Info (phone or email)</label>
+            <input type="text" name="contact_info" placeholder="so owner can contact you" required>
+
+            <div class="meta-row">
+              <div class="meta-item">Tip: add a clear photo to help owners identify the item</div>
+              <div class="meta-item">Fields marked required must be filled</div>
+            </div>
+
+            <div class="submit-row">
+              <button type="submit">Submit Report</button>
+              <button type="button" class="secondary" onclick="document.getElementById('imageInput').click()">Upload Images</button>
+            </div>
+            <input id="imageInput" style="display:none" type="file" name="images[]" accept="image/*" multiple>
+            <div id="fileError" class="file-error" aria-live="polite" style="display:none"></div>
+            <div id="thumbs" class="thumbs" aria-hidden="false"></div>
+            <div class="upload-overall" id="uploadOverall" style="display:none">
+              <div class="overall-label" id="overallLabel">Uploading: 0%</div>
+              <div class="overall-bar"><div class="fill" id="overallFill"></div></div>
+            </div>
+            <div id="uploadResult" style="margin-top:8px"></div>
+            <script>
+            // Multiple images: preview thumbnails, validation, removal, drag-drop, and AJAX upload with progress
+            (function(){
+              const input = document.getElementById('imageInput');
+              const preview = document.getElementById('previewBox');
+              const thumbs = document.getElementById('thumbs');
+              const submitBtn = document.querySelector('#foundForm button[type="submit"]');
+              const errorEl = document.getElementById('fileError');
+              const overall = document.getElementById('uploadOverall');
+              const overallFill = document.getElementById('overallFill');
+              const overallLabel = document.getElementById('overallLabel');
+              const resultEl = document.getElementById('uploadResult');
+              const MAX_BYTES = 5 * 1024 * 1024; // 5MB per file
+              const ALLOWED = ['image/jpeg','image/jpg','image/png'];
+
+              let files = []; // array of File objects user selected
+
+              function showError(msg){ errorEl.textContent = msg; errorEl.style.display='block'; submitBtn.disabled = true; }
+              function clearError(){ errorEl.textContent=''; errorEl.style.display='none'; submitBtn.disabled = false; }
+
+              function setPreviewByFile(file){
+                if(!file){ preview.textContent = 'Drop or select images to preview'; return; }
+                preview.innerHTML = '';
+                const pimg = document.createElement('img'); pimg.src = URL.createObjectURL(file);
+                pimg.onload = ()=> URL.revokeObjectURL(pimg.src);
+                preview.appendChild(pimg);
+              }
+
+              function renderThumbs(){
+                thumbs.innerHTML = '';
+                files.forEach((file, idx)=>{
+                  const t = document.createElement('div'); t.className='thumb';
+                  const img = document.createElement('img'); img.src = URL.createObjectURL(file);
+                  img.onload = ()=> URL.revokeObjectURL(img.src);
+                  const btn = document.createElement('button'); btn.className='remove-btn'; btn.type='button'; btn.title='Remove'; btn.innerHTML='✕';
+                  btn.addEventListener('click', ()=>{ files.splice(idx,1); syncInput(); renderThumbs(); });
+                  // clicking thumbnail sets preview to this image
+                  img.style.cursor = 'pointer'; img.addEventListener('click', ()=> setPreviewByFile(file));
+                  const badge = document.createElement('div'); badge.className='index-badge'; badge.textContent = (idx+1);
+                  const prog = document.createElement('div'); prog.className='progress'; prog.innerHTML = '<div class="bar" style="width:0%"></div>';
+                  t.appendChild(img); t.appendChild(btn); t.appendChild(badge); t.appendChild(prog); thumbs.appendChild(t);
+                });
+                // set preview to first image if available
+                if(files.length>0) setPreviewByFile(files[0]);
+                else setPreviewByFile(null);
+              }
+
+              function syncInput(){
+                const dt = new DataTransfer();
+                files.forEach(f=> dt.items.add(f));
+                input.files = dt.files;
+                clearError();
+              }
+
+              function validateFiles(flist){
+                const toAdd = [];
+                for(const f of flist){
+                  if(!ALLOWED.includes(f.type)) { showError('One or more files have invalid type — use JPG or PNG'); return false; }
+                  if(f.size > MAX_BYTES) { showError('One or more files exceed 5MB'); return false; }
+                  toAdd.push(f);
+                }
+                files = files.concat(toAdd);
+                if(files.length>8){ showError('Max 8 images allowed'); files = files.slice(0,8); }
+                syncInput(); renderThumbs(); return true;
+              }
+
+              input.addEventListener('change', e=>{ if(e.target.files && e.target.files.length){ if(validateFiles(e.target.files)){ setPreviewByFile(files[0]); } } });
+
+              // Drag & drop multiple
+              preview.addEventListener('dragover', e=>{ e.preventDefault(); preview.style.opacity=0.9; });
+              preview.addEventListener('dragleave', e=>{ preview.style.opacity=1; });
+              preview.addEventListener('drop', e=>{
+                e.preventDefault(); preview.style.opacity=1;
+                const fl = Array.from(e.dataTransfer.files||[]);
+                if(fl.length) validateFiles(fl);
+              });
+
+              // AJAX upload on submit with progress
+              document.getElementById('foundForm').addEventListener('submit', function(ev){
+                ev.preventDefault();
+                clearError(); resultEl.textContent = '';
+                const form = ev.target;
+                const fd = new FormData(form);
+                // If no images, just submit normally via AJAX
+                if(files.length===0){ submitViaXhr(fd); return; }
+
+                // Show overall progress
+                overall.style.display = 'block'; overallFill.style.width='0%'; overallLabel.textContent='Uploading: 0%';
+                submitBtn.disabled = true;
+                submitViaXhr(fd);
+              });
+
+              function submitViaXhr(formData){
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', document.getElementById('foundForm').action);
+                xhr.upload.addEventListener('progress', function(e){
+                  if(!e.lengthComputable) return;
+                  const pct = Math.round((e.loaded / e.total) * 100);
+                  overallFill.style.width = pct + '%'; overallLabel.textContent = 'Uploading: ' + pct + '%';
+                  // distribute progress across thumbs proportionally
+                  distributeProgress(e.loaded, e.total);
+                });
+                xhr.addEventListener('load', function(){
+                  submitBtn.disabled = false; overall.style.display='none';
+                  if(xhr.status>=200 && xhr.status<300){ resultEl.innerHTML = '<span style="color:green">Upload complete</span>'; }
+                  else { resultEl.innerHTML = '<span style="color:#b71c1c">Upload failed: '+xhr.statusText+'</span>'; }
+                });
+                xhr.addEventListener('error', function(){ submitBtn.disabled = false; overall.style.display='none'; resultEl.innerHTML = '<span style="color:#b71c1c">Upload failed</span>'; });
+                xhr.send(formData);
+              }
+
+              function distributeProgress(loaded, total){
+                // Approximate per-file progress by their sizes
+                const thumbEls = thumbs.querySelectorAll('.thumb');
+                if(thumbEls.length===0) return;
+                // compute cumulative sizes
+                const sizes = files.map(f=>f.size);
+                const totalSizes = sizes.reduce((a,b)=>a+b,0) || 1;
+                let acc = 0; // bytes represented so far
+                let remaining = loaded;
+                for(let i=0;i<files.length;i++){
+                  const portion = Math.min(sizes[i], Math.max(0, remaining - acc));
+                  const pct = Math.min(100, Math.round((portion / sizes[i]) * 100));
+                  const bar = thumbEls[i].querySelector('.bar'); if(bar) bar.style.width = pct + '%';
+                  acc += portion; // move accumulator
+                }
+              }
+
+              // Initialize
+              clearError(); renderThumbs();
+            })();
+            </script>
+          </form>
+        </div>
+      </div>
+
+      <aside class="side-panel">
+        <div class="file-preview" id="previewBox">Drop or select an image to preview</div>
+        <div class="file-hint">Accepted: JPG, PNG. Max recommended size: 5MB.</div>
+        <div style="height:12px"></div>
+        <div class="help-text">
+          <h4 style="margin:0 0 8px">Quick tips</h4>
+          <ul style="margin:0 0 0 18px; padding:0; color:var(--muted)">
+            <li>Use a clear photo showing unique marks.</li>
+            <li>Mention the exact location where you found it.</li>
+            <li>Provide contact details so owners can reach you.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+<footer>© 2025 Lost & Found Portal</footer>
+</body>
+</html>

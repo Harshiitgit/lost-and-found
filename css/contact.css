@@ -1,0 +1,4 @@
+@import url('common.css');
+
+/* Contact page tweaks */
+.form-container textarea{ min-height:120px; }

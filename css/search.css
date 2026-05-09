@@ -1,0 +1,4 @@
+@import url('common.css');
+
+/* Search page tweaks */
+.results p{ margin:6px 0; color:var(--muted); }

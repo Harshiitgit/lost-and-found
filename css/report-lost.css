@@ -1,0 +1,4 @@
+@import url('common.css');
+
+/* Report Lost specific rules (if any) */
+.form-container{ padding-top:12px; }
